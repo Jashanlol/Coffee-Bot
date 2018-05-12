@@ -29,7 +29,7 @@ class ptags:
     async def create(self, ctx, name: str, *, content: str):
         """Create a personal tag.
         This will create a tag that only you can use."""
-        if name in ['create','tag','delete','all']:
+        if name in ['create','tag','delete','all', 'walkthrough', 'make']:
             return await ctx.send(f'{name} is a reserved name and cannot be created.')
         if str(ctx.author.id) in self.ptags:
             if name in self.ptags[str(ctx.author.id)]:
@@ -43,11 +43,11 @@ class ptags:
         self.save_settings()
         await ctx.send('Personal tag successfully created.')
 
-    @ptag.command()
+    @ptag.command(aliases=['remove'])
     async def delete(self, ctx, *, name: str):
         """Delete a personal tag.
         This deletes a personal tag that you own."""
-        if name in ['create','tag','delete','all']:
+        if name in ['create','tag','delete','all', 'remove', 'walkthrough', 'make']:
             return await ctx.send(f'{name} is reserved name and cannot be deleted.')
         if name in self.ptags[str(ctx.author.id)]:
             self.ptags[str(ctx.author.id)].pop(name)
@@ -148,6 +148,22 @@ class ptags:
                 return await ctx.send('Personal tag not found.')
         else:
             return await ctx.send('Member has no personal tags.')
+
+    @ptag.command(aliases=['make'])
+    async def walkthrough(self, ctx):
+        """Need help making a tag?
+        The bot will walk you through on how to make a tag."""
+        await ctx.send('Great, you wanna make a tag! What do you want to name your command?')
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        msg = await self.bot.wait_for('message', check=check)
+        name = f'Great the tag name would be `\"{msg.content}\"`\nNow what do you want the content of the tag to be?'
+        await ctx.send(name)
+        msg2 = await self.bot.wait_for('message', check=check)
+        content = f'Great the tag content would be `{msg2.content}`'
+        await ctx.send(content)
+        await ctx.send(f'Here is what the command would look like: \n`c tag create \"{msg.content}\" {msg2.content}`'
+                       f'\nor\n`coffee tag create \"{msg.content}\"{msg2.content}`')
 
 def check_folders():
     if not os.path.exists("data/ptags"):

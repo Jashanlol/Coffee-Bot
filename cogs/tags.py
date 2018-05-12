@@ -30,7 +30,7 @@ class Tags:
     async def create(self, ctx, name: str, *, content: str):
         """Creates a tag.
         Tag name has to not already exist within the server."""
-        if name in ['create','tag','delete','box', 'info', 'owner', 'edit', 'all']:
+        if name in ['create','tag','delete', 'info', 'owner', 'edit', 'all', 'walkthrough', 'make', 'remove']:
             return await ctx.send(f'{name} is a reserved name and cannot be created.')
         if str(ctx.guild.id) in self.tags:
             if name in self.tags[str(ctx.guild.id)]:
@@ -42,11 +42,11 @@ class Tags:
         self.save_settings()
         await ctx.send(f'Tag {name} successfully created.')
 
-    @tag.command()
+    @tag.command(aliases=['remove'])
     async def delete(self, ctx, *, name: str):
         """Deletes a tag.
         You need to own the tag and it has to exist in the server."""
-        if name in ['create','tag','delete','box', 'info', 'owner', 'edit', 'all']:
+        if name in ['create','tag','delete', 'info', 'owner', 'edit', 'all', 'remove', 'walkthrough', 'make']:
             return await ctx.send(f'{name} is a reserved name and cannot be deleted.')
         elif str(ctx.guild.id) in self.tags:
             if name in self.tags[str(ctx.guild.id)]:
@@ -124,6 +124,22 @@ class Tags:
                 await ctx.send('Tag not found.')
         else:
             await ctx.send('Guild has no tags. :frowning2:')
+
+    @tag.command(aliases=['make'])
+    async def walkthrough(self, ctx):
+        """Need help making a tag?
+        The bot will walk you through on how to make a tag."""
+        await ctx.send('Great, you wanna make a tag! What do you want to name your command?')
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        msg = await self.bot.wait_for('message', check=check)
+        name = f'Great the tag name would be `\"{msg.content}\"`\nNow what do you want the content of the tag to be?'
+        await ctx.send(name)
+        msg2 = await self.bot.wait_for('message', check=check)
+        content = f'Great the tag content would be `{msg2.content}`'
+        await ctx.send(content)
+        await ctx.send(f'Here is what the command would look like: \n`c tag create \"{msg.content}\" {msg2.content}`'
+                       f'\nor\n`coffee tag create \"{msg.content}\"{msg2.content}`')
 
 
 def check_folders():

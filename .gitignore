@@ -3,5 +3,6 @@
 *.xml
 *.pyc
 safety.py
+data
 *.xml___jb_tmp___
 *.swp

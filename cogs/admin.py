@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from safety import token
 
 import traceback
 
@@ -58,6 +59,13 @@ class Admin:
             await ctx.send(embed=discord.Embed(color=ctx.message.author.color,
                                                title="✅ Success",
                                                description="Plugin Reloaded"))
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def shutdown(self, ctx):
+        await ctx.send('Bye!')
+        await self.bot.logout()
+
 def setup(bot):
     bot.add_cog(Admin(bot))
 

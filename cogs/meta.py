@@ -22,16 +22,17 @@ class Meta:
 
     async def on_message(self, message):
         if str(self.bot.user.id) in self.stats:
-            self.stats[str(self.bot.user.id)] +=  1
+            self.stats[str(self.bot.user.id)]['messages'] +=  1
         else:
-            self.stats[str(self.bot.user.id)] = 1
+            self.stats[str(self.bot.user.id)] = {'messages':1}
         self.save_settings()
 
     async def on_command(self, ctx):
-        if 'commands' in self.stats:
-            self.stats['commands'] += 1
-        else:
-            self.stats['commands'] = 1
+        if str(self.bot.user.id) in self.stats:
+            if 'commands' in self.stats[str(self.bot.user.id)]:
+                self.stats[str(self.bot.user.id)]['commands'] += 1
+            else:
+                self.stats[str(self.bot.user.id)] = {'commands':1}
 
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
@@ -65,10 +66,10 @@ class Meta:
         """Never forget another task again!
         Coffee will remind you what to do and when to do it."""
 
-        await ctx.send(f"{ctx.author.name}, I'll remind you to {reminder} in {str(time)} seconds.")
+        await ctx.send(f"{ctx.author.name}, I'll remind you: {reminder} in {str(time)} seconds.")
         await asyncio.sleep(time)
 
-        await ctx.send(f'{ctx.author.mention} you asked me {time} seconds ago to remind you to {reminder} now.')
+        await ctx.send(f'{ctx.author.mention} you asked me {time} seconds ago to remind you: {reminder} now.')
 
     @commands.command(aliases=['ping'])
     async def latency(self, ctx):
@@ -168,7 +169,7 @@ class Meta:
         text = len(text_channels)
         voice = len(voice_channels)
         owner = self.bot.get_user(id=294894701708967936)
-        messages = self.stats[str(self.bot.user.id)]
+        messages = self.stats[str(self.bot.user.id)]['messages']
 
         e = discord.Embed(color=ctx.guild.me.color)
         e.set_author(name=owner, icon_url=owner.avatar_url)
@@ -176,7 +177,8 @@ class Meta:
                     f'{i} {total_idle} {d} {total_dnd} {of} {total_offline}', inline=False)
         e.add_field(name='Member Stats', value=f'{total_members} total\n{total_unique} unique\n{bots} unique bot users')
         e.add_field(name='Channels Stats', value=f'{text+voice} total\n{text} text\n{voice} voice')
-        e.add_field(name='Other Stats', value=f"{messages} messages seen \n{self.stats['commands']} commands run\n"
+        e.add_field(name='Other Stats', value=f"{messages} messages seen \n{self.stats[str(self.bot.user.id)]['commands']}"
+                                              f" commands run\n"
                                               f"{len(self.bot.guilds)} guilds")
         e.add_field(name='Process', value=f"{round(psutil.Process().memory_full_info().uss / 2 ** 20, 2)} MiB"
                                           f"\n{round(cpu)} % CPU")
@@ -194,7 +196,6 @@ class Meta:
         if len(members) > 3:
             await ctx.send('To reduce spam, you can only request info for 3 members at a time.')
             return
-
         for member in members:
             if member.voice is not None:
                 vc = member.voice.channel

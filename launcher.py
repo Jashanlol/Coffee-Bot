@@ -9,7 +9,7 @@ from safety import token
 
 initial_cogs = ['cogs.meta', 'cogs.admin', 'cogs.tags', 'cogs.ptags', 'cogs.minigames']
 
-bot = commands.Bot(command_prefix=['c ','coffee '])
+bot = commands.Bot(command_prefix=['c ','coffee '], description='Coffee Bot')
 
 @bot.event
 async def on_ready():
