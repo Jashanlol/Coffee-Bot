@@ -7,6 +7,8 @@ from .utils.dataIO import dataIO
 
 
 class Tags:
+    """Server tags.
+    Essentially custom server commands."""
 
     def __init__(self, bot):
         self.bot = bot

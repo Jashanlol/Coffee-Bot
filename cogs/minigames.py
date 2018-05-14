@@ -8,6 +8,8 @@ from .utils.dataIO import dataIO
 
 
 class Minigames:
+    """When you have free time.
+    These games only take a couple seconds but are addicting as hell."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -26,9 +28,12 @@ class Minigames:
         except Exception:
             await ctx.send('Format is NdN!')
             return
-
+        if rolls > 500:
+            return await ctx.send('Please choose a roll number under 500!')
         result = ', '.join(str(random.randint(1, limit)) for r in range(rolls))
-        await ctx.send(result)
+        if len(result) > 2000:
+            return await ctx.send('Message would be over 2000 characters!')
+        await ctx.send(f'```{result}```')
 
     @commands.command(aliases=['choose'])
     async def choice(self, ctx, *choices: str):
@@ -64,7 +69,8 @@ class Minigames:
     async def _ball(self, ctx):
         """8ball. What more do you need?
         Let Coffee answer your questions."""
-        e = discord.Embed(color=ctx.author.color, description=f'{ctx.author.mention} {random.choice(ball)}')
+        e = discord.Embed(color=ctx.author.color, description=f'{random.choice(ball)}')
+        e.set_footer(text=f'\U0001f3b1 {ctx.author.name}')
         await ctx.send(embed=e)
 
     @commands.command()
@@ -78,34 +84,23 @@ class Minigames:
         self.save_settings()
         rand = random.randint(0, 2)
         choices = ["paper", "scissors", "rock"]
-        outcome_list = ["draw", "lose", "win"]
+        outcome_list = ["draws", "loses", "wins"]
         result = (choices.index(choice) + rand) % 3
         g = outcome_list[rand]
-        if g == 'win':
+        if g == 'wins':
             self.mstats[str(ctx.author.id)]['rps']['wins'] +=1
-        if g == 'draw':
+        if g == 'draws':
             self.mstats[str(ctx.author.id)]['rps']['ties'] +=1
-        if g == 'lose':
+        if g == 'loses':
             self.mstats[str(ctx.author.id)]['rps']['lose'] +=1
         self.save_settings()
         wins = self.mstats[str(ctx.author.id)]['rps']['wins']
         loses = self.mstats[str(ctx.author.id)]['rps']['lose']
         ties = self.mstats[str(ctx.author.id)]['rps']['ties']
-        f = ("I picked {}, you {}".format(choices[result], g))
+        f = ("I picked {}, {} {}".format(choices[result],ctx.author.mention, g))
         e = discord.Embed(description=f)
         e.set_footer(text=f'Your Stats: {wins} wins, {loses} losses, {ties} ties')
         await ctx.send(embed=e)
-
-
-
-    @commands.command()
-    async def test(self, ctx, *, choice: str):
-        rand = random.randint(0, 2)
-        choices = ["paper", "scissors", "rock"]
-        outcome_list = ["draw", "lose", "win"]
-        result = (choices.index(choice) + rand) % 3
-        await ctx.send("I drew {}, you {}".format(choices[result], outcome_list[rand]))
-
 
 def check_folders():
     if not os.path.exists("data/mstats"):

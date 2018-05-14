@@ -1,17 +1,21 @@
-import datetime
 import asyncio
-import discord
-import psutil
-import platform
-import pkg_resources
+import datetime
 import os
+import platform
 import unicodedata
 
+import aiohttp
+import discord
+import pkg_resources
+import psutil
 from discord.ext import commands
+
 from .utils.dataIO import dataIO
 
 
 class Meta:
+    """Commands most bots have.
+    Entertainment and useful."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -22,9 +26,9 @@ class Meta:
 
     async def on_message(self, message):
         if str(self.bot.user.id) in self.stats:
-            self.stats[str(self.bot.user.id)]['messages'] +=  1
+            self.stats[str(self.bot.user.id)]['messages'] += 1
         else:
-            self.stats[str(self.bot.user.id)] = {'messages':1}
+            self.stats[str(self.bot.user.id)] = {'messages': 1}
         self.save_settings()
 
     async def on_command(self, ctx):
@@ -32,13 +36,11 @@ class Meta:
             if 'commands' in self.stats[str(self.bot.user.id)]:
                 self.stats[str(self.bot.user.id)]['commands'] += 1
             else:
-                self.stats[str(self.bot.user.id)] = {'commands':1}
+                self.stats[str(self.bot.user.id)] = {'commands': 1}
+        self.save_settings()
 
     async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send(error)
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(error)
+        await ctx.send(f'```py\n{error}```')
 
     @commands.command()
     async def hello(self, ctx):
@@ -69,7 +71,7 @@ class Meta:
         await ctx.send(f"{ctx.author.name}, I'll remind you: {reminder} in {str(time)} seconds.")
         await asyncio.sleep(time)
 
-        await ctx.send(f'{ctx.author.mention} you asked me {time} seconds ago to remind you: {reminder} now.')
+        await ctx.send(f'{ctx.author.mention} you asked me {time} seconds ago to remind you: {reminder}')
 
     @commands.command(aliases=['ping'])
     async def latency(self, ctx):
@@ -103,7 +105,7 @@ class Meta:
         await user.send(embed=e)
 
     @commands.command(aliases=['charinfo','infochar'])
-    async def char (self, ctx, *, characters: str):
+    async def char(self, ctx, *, characters: str):
         """Get the info of an emoji.
         Just do c char <list of emojis>"""
         def convert(e):
@@ -121,24 +123,6 @@ class Meta:
         if len(message) > 2048:
             return await ctx.send('Message would be too large. Try again with less emojis!')
         await ctx.send(embed=e)
-
-
-    @commands.command()
-    async def avatar(self, ctx, *members: discord.Member):
-        """Get multiple avatars.
-        Remember to put spaces in between each of the people and quotes if their name is longer than one word."""
-        if len(members) > 3:
-
-            await ctx.send('To reduce spam, you cannot request more than 3 avatars at once.')
-            return
-        else:
-            for member in members:
-                e = discord.Embed(description=f'Click [here]({member.avatar_url_as(format=None)}) for the online link'
-                                              f' or drag to desktop!',
-                                  color=member.color)
-                e.set_image(url=member.avatar_url_as(format=None, static_format='jpg'))
-
-                await ctx.send(embed=e)
 
     @commands.group(invoke_without_command=True)
     async def about(self, ctx):
@@ -319,6 +303,44 @@ class Meta:
             await ctx.send(time - i)
             await asyncio.sleep(1)
         await ctx.send('Go!')
+
+    @commands.command()
+    async def shared(self, ctx, *, user: discord.User = None):
+        """See what servers you share with me.
+        Just type the users name or use their id. You can also use their mention, but not recommended."""
+        if user is None:
+            user = ctx.author
+        shared = "\n".join([g.name for g in self.bot.guilds if user in g.members])
+        e = discord.Embed(color=0x36393E, description=f'```fix\n{shared}```')
+        e.set_footer(text=f'Shared with {user}')
+        e.set_thumbnail(url=user.avatar_url_as(format=None))
+        await ctx.send(embed=e)
+
+    @commands.command()
+    async def avatar(self, ctx, *members: discord.User):
+        """Get multiple avatars.
+        Remember to put spaces in between each of the people and quotes if their name is longer than one word."""
+        if len(members) > 3:
+            return await ctx.send('To reduce spam, you can only get the avatar of 3 members at a time.')
+        images = []
+        for member in members:
+            async with aiohttp.ClientSession() as cs:
+                async with cs.get(url=member.avatar_url_as(format=None, size=1024)) as f:
+                    if member.is_avatar_animated():
+                        images.append(discord.File(await f.read(), filename=f'{member}.gif'))
+                    else:
+                        images.append(discord.File(await f.read(), filename=f'{member}.png'))
+        await ctx.send(files=images)
+
+
+    @commands.command()
+    async def talk(self, ctx, *, message: str):
+        """Send messages to my owner through me.
+        Don't spam!"""
+        user = self.bot.get_user(id=294894701708967936)
+        await user.send(f'In {ctx.channel.mention} for server {ctx.guild.name}, {ctx.author.mention} said: {message}')
+        await ctx.send(f'I have sent your message to {user}')
+
 
 def check_folders():
     if not os.path.exists("data/stats"):

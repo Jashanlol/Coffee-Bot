@@ -7,7 +7,8 @@ from discord.ext import commands
 
 from safety import token
 
-initial_cogs = ['cogs.meta', 'cogs.admin', 'cogs.tags', 'cogs.ptags', 'cogs.minigames']
+initial_cogs = ['cogs.meta', 'cogs.admin', 'cogs.tags', 'cogs.ptags', 'cogs.minigames', 'cogs.eval',
+                'cogs.tools']
 
 bot = commands.Bot(command_prefix=['c ','coffee '], description='Coffee Bot')
 
@@ -25,8 +26,6 @@ async def on_ready():
         await asyncio.sleep(20)
         await bot.change_presence(activity=discord.Game(name=f'on {len(bot.guilds)} servers with {len(bot.users)} users'))
         await asyncio.sleep(20)
-
-
 
 for cog in initial_cogs:
     try:

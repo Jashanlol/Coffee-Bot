@@ -6,6 +6,8 @@ from .utils.dataIO import dataIO
 from discord.ext import commands
 
 class ptags:
+    """Personal Tags.
+    Essentially custom personal commands."""
 
     def __init__(self, bot):
         self.bot = bot
