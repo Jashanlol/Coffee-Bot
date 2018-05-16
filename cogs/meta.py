@@ -15,7 +15,7 @@ from .utils.dataIO import dataIO
 
 class Meta:
     """Commands most bots have.
-    Entertainment and useful."""
+    Entertainment and use"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -23,6 +23,11 @@ class Meta:
 
     def save_settings(self):
         dataIO.save_json("data/stats/stats.json", self.stats)
+
+    def chunks(self, l, n):
+        """Yield successive n-sized chunks from l."""
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
 
     async def on_message(self, message):
         if str(self.bot.user.id) in self.stats:
@@ -40,7 +45,11 @@ class Meta:
         self.save_settings()
 
     async def on_command_error(self, ctx, error):
-        await ctx.send(f'```py\n{error}```')
+        try:
+            await ctx.send(f'```asciidoc\n= {error} = ```')
+        except:
+            await ctx.send('Could not execute command, either it is not a registered command or the request would be '
+                           'over 2000 characters.')
 
     @commands.command()
     async def hello(self, ctx):
@@ -86,7 +95,7 @@ class Meta:
         """Please give feedback if you have any!
         It means a lot to me! You can request features or fix existing ones.
         Thanks!"""
-        channel = self.bot.get_channel(id=443234596767793155)
+        channel = self.bot.get_channel(id=446106442848796674)
 
         e = discord.Embed(color=ctx.author.color)
         e.add_field(name='Feedback', value=f'```Guild: {ctx.guild.name} '
@@ -112,7 +121,7 @@ class Meta:
             emoji = unicodedata.name(e)
             numbers = f'{ord(e):x}'
             name = emoji.replace(' ', '-')
-            return f'[{e} {emoji}](https://emojipedia.org/{name.lower()}) — `\\U{numbers:>08}`'
+            return f'`\\U{numbers:>08}` — [{e} {emoji}](https://emojipedia.org/{name.lower()})'
         def uni(f):
             numbers = f'{ord(f):x}'
             return f'\\U{numbers:>08}'
@@ -123,6 +132,19 @@ class Meta:
         if len(message) > 2048:
             return await ctx.send('Message would be too large. Try again with less emojis!')
         await ctx.send(embed=e)
+
+    @commands.command(aliases=['discriminator'])
+    async def discrim(self, ctx, *, discriminator: str):
+        """See if you are unique."""
+        if str(ctx.guild.id) == "336642139381301249":
+            if discriminator == "0001":
+                return await ctx.send('Sorry to inform you, but this is not a unique discriminator.')
+        if len(f'{discriminator}') != 4:
+            return await ctx.send(f'A discriminator is 4 numbers, not {len(discriminator)}.')
+        all = list(self.chunks([str(user) for user in self.bot.users if user.discriminator == discriminator], 54))
+        for i in all:
+            f = "\n".join(i)
+            await ctx.send(f'```{f}```')
 
     @commands.group(invoke_without_command=True)
     async def about(self, ctx):
@@ -139,10 +161,10 @@ class Meta:
         total_dnd = len({m.id for m in self.bot.get_all_members() if m.status is discord.Status.dnd})
         total_offline = len({m.id for m in self.bot.get_all_members() if m.status is discord.Status.offline})
         bots = len({m.id for m in self.bot.get_all_members() if m.bot is True})
-        o = '<:online:443502208177274920>'
-        i = '<:idle:443503452241395723>'
-        d = '<:dnd:443502913709670409>'
-        of ='<:offline:443503147155980289>'
+        o = '<:online:313956277808005120>'
+        i = '<:away:313956277220802560>'
+        d = '<:dnd:313956276893646850>'
+        of ='<:offline:313956277237710868>'
         total_unique = len(self.bot.users)
         cpu = psutil.cpu_percent()
         voice_channels = []
@@ -155,7 +177,7 @@ class Meta:
         owner = self.bot.get_user(id=294894701708967936)
         messages = self.stats[str(self.bot.user.id)]['messages']
 
-        e = discord.Embed(color=ctx.guild.me.color)
+        e = discord.Embed(description=f'[Join the Official Support Server](https://discord.gg/sCht25q)',color=ctx.guild.me.color)
         e.set_author(name=owner, icon_url=owner.avatar_url)
         e.add_field(name='Member Status', value=f'{o} {total_online} '
                     f'{i} {total_idle} {d} {total_dnd} {of} {total_offline}', inline=False)
@@ -177,6 +199,8 @@ class Meta:
     async def info(self, ctx, *members: discord.Member):
         """Get the info of multiple members.
         Remember to put spaces in between each member and put quotes around their name if it is longer than a word."""
+        if not members:
+            return await ctx.send('Members is a required message that is missing.')
         if len(members) > 3:
             await ctx.send('To reduce spam, you can only request info for 3 members at a time.')
             return
@@ -210,12 +234,12 @@ class Meta:
         total_idle = len({m.id for m in ctx.guild.members if m.status is discord.Status.idle})
         total_dnd = len({m.id for m in ctx.guild.members if m.status is discord.Status.dnd})
         total_offline = len({m.id for m in ctx.guild.members if m.status is discord.Status.offline})
-        o = '<:online:443502208177274920>'
-        i = '<:idle:443503452241395723>'
-        d = '<:dnd:443502913709670409>'
-        of ='<:offline:443503147155980289>'
-        x = '<:xmark:443528464226582548>'
-        ch = '<:checkmark:443528481196867585>'
+        o = '<:online:313956277808005120>'
+        i = '<:away:313956277220802560>'
+        d = '<:dnd:313956276893646850>'
+        of ='<:offline:313956277237710868>'
+        x = '<:xmark:314349398824058880>'
+        ch = '<:check:314349398811475968>'
         if (len(ctx.guild.features)) >= 3:
             c = f'{ch}: Parterned'
         else:
@@ -317,9 +341,11 @@ class Meta:
         await ctx.send(embed=e)
 
     @commands.command()
-    async def avatar(self, ctx, *members: discord.User):
+    async def avatar(self, ctx, *members: discord.Member):
         """Get multiple avatars.
         Remember to put spaces in between each of the people and quotes if their name is longer than one word."""
+        if len(members) is 0:
+            return await ctx.send('Members is a required message that is missing.')
         if len(members) > 3:
             return await ctx.send('To reduce spam, you can only get the avatar of 3 members at a time.')
         images = []
@@ -341,6 +367,17 @@ class Meta:
         await user.send(f'In {ctx.channel.mention} for server {ctx.guild.name}, {ctx.author.mention} said: {message}')
         await ctx.send(f'I have sent your message to {user}')
 
+    @commands.command()
+    async def die(self, ctx):
+        """1 v 4? No problem.
+        Now you can kill 3 people at once in your guild."""
+        files = []
+        f = 'https://steamusercontent-a.akamaihd.net/ugc/19968052724714266'
+        '0/5FEE28B1D22D8D41101ACF82A99F0372E69CE8E6/'
+        async with aiohttp.ClientSession().get(url='https://steamusercontent-a.akamaihd.net/ugc/19968052724714266'
+                                                   '0/5FEE28B1D22D8D41101ACF82A99F0372E69CE8E6/') as r:
+            files.append(discord.File(await r.read(), filename=f'{f}.gif'))
+            await ctx.send(files=files)
 
 def check_folders():
     if not os.path.exists("data/stats"):

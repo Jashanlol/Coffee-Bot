@@ -10,7 +10,7 @@ from safety import token
 initial_cogs = ['cogs.meta', 'cogs.admin', 'cogs.tags', 'cogs.ptags', 'cogs.minigames', 'cogs.eval',
                 'cogs.tools']
 
-bot = commands.Bot(command_prefix=['c ','coffee '], description='Coffee Bot')
+bot = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or('c? ', 'c!', 'c '), description='Coffee Bot')
 
 @bot.event
 async def on_ready():
@@ -22,7 +22,7 @@ async def on_ready():
     x = 1
     while True:
         x +=1
-        await bot.change_presence(activity=discord.Game(name='Prefix = c or coffee'))
+        await bot.change_presence(activity=discord.Game(name='Prefix = c or c! or c?'))
         await asyncio.sleep(20)
         await bot.change_presence(activity=discord.Game(name=f'on {len(bot.guilds)} servers with {len(bot.users)} users'))
         await asyncio.sleep(20)
