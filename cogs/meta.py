@@ -45,11 +45,14 @@ class Meta:
         self.save_settings()
 
     async def on_command_error(self, ctx, error):
-        try:
-            await ctx.send(f'```asciidoc\n= {error} = ```')
-        except:
-            await ctx.send('Could not execute command, either it is not a registered command or the request would be '
-                           'over 2000 characters.')
+        if isinstance(error, commands.CommandNotFound):
+            return
+        else:
+            try:
+                await ctx.send(f'```asciidoc\n= {error} = ```')
+            except:
+                await ctx.send('Could not execute command, either it is not a registered command or the request would be '
+                               'over 2000 characters.')
 
     @commands.command()
     async def hello(self, ctx):
@@ -374,10 +377,12 @@ class Meta:
         files = []
         f = 'https://steamusercontent-a.akamaihd.net/ugc/19968052724714266'
         '0/5FEE28B1D22D8D41101ACF82A99F0372E69CE8E6/'
-        async with aiohttp.ClientSession().get(url='https://steamusercontent-a.akamaihd.net/ugc/19968052724714266'
-                                                   '0/5FEE28B1D22D8D41101ACF82A99F0372E69CE8E6/') as r:
-            files.append(discord.File(await r.read(), filename=f'{f}.gif'))
-            await ctx.send(files=files)
+        async with aiohttp.ClientSession() as r:
+            async with r.get(url='https://steamusercontent-a.akamaihd.net/ugc/19968052724714266'
+                                                   '0/5FEE28B1D22D8D41101ACF82A99F0372E69CE8E6/') as img:
+                files.append(discord.File(await img.read(), filename=f'{f}.gif'))
+                await ctx.send(files=files)
+            r.close()
 
 def check_folders():
     if not os.path.exists("data/stats"):
