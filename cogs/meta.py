@@ -58,7 +58,7 @@ class Meta:
     async def hello(self, ctx):
         """Hello, this is my opening greeting."""
         e = discord.Embed(description=f"Hello there, I am Coffee bot. My avatar can be found [here]"
-        f"({self.bot.user.avatar_url}) and my creator is Jashan. I hope you enjoy testing my commands "
+                                      f"({self.bot.user.avatar_url}) and my creator is Jashan. I hope you enjoy testing my commands "
                                       f"and while you're at it, get some Coffee.", color=
                           ctx.guild.me.color)
         await ctx.send(embed=e)
@@ -102,7 +102,7 @@ class Meta:
 
         e = discord.Embed(color=ctx.author.color)
         e.add_field(name='Feedback', value=f'```Guild: {ctx.guild.name} '
-                                    f'(ID:{ctx.guild.id})\nUser: {ctx.author} (ID: {ctx.author.id})```', inline=False)
+                                           f'(ID:{ctx.guild.id})\nUser: {ctx.author} (ID: {ctx.author.id})```', inline=False)
         e.add_field(name='Message', value=feedback, inline=False)
         await channel.send(embed=e)
 
@@ -183,7 +183,7 @@ class Meta:
         e = discord.Embed(description=f'[Join the Official Support Server](https://discord.gg/sCht25q)',color=ctx.guild.me.color)
         e.set_author(name=owner, icon_url=owner.avatar_url)
         e.add_field(name='Member Status', value=f'{o} {total_online} '
-                    f'{i} {total_idle} {d} {total_dnd} {of} {total_offline}', inline=False)
+                                                f'{i} {total_idle} {d} {total_dnd} {of} {total_offline}', inline=False)
         e.add_field(name='Member Stats', value=f'{total_members} total\n{total_unique} unique\n{bots} unique bot users')
         e.add_field(name='Channels Stats', value=f'{text+voice} total\n{text} text\n{voice} voice')
         e.add_field(name='Other Stats', value=f"{messages} messages seen \n{self.stats[str(self.bot.user.id)]['commands']}"
@@ -379,7 +379,7 @@ class Meta:
         '0/5FEE28B1D22D8D41101ACF82A99F0372E69CE8E6/'
         async with aiohttp.ClientSession() as r:
             async with r.get(url='https://steamusercontent-a.akamaihd.net/ugc/19968052724714266'
-                                                   '0/5FEE28B1D22D8D41101ACF82A99F0372E69CE8E6/') as img:
+                                 '0/5FEE28B1D22D8D41101ACF82A99F0372E69CE8E6/') as img:
                 files.append(discord.File(await img.read(), filename=f'{f}.gif'))
                 await ctx.send(files=files)
             r.close()

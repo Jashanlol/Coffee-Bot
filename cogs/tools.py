@@ -1,6 +1,7 @@
 import os
 import discord
 import asyncio
+import datetime
 import time
 
 from .utils.dataIO import dataIO
@@ -15,9 +16,11 @@ class Utils:
     def __init__(self, bot):
         self.bot = bot
         self.away = dataIO.load_json("data/away/away.json")
+        self.search = dataIO.load_json("data/search/search.json")
 
     def save_settings(self):
         dataIO.save_json("data/away/away.json", self.away)
+        dataIO.save_json("data/search/search.json", self.search)
 
     @commands.command()
     async def mass(self, ctx, *, substance: str):
@@ -41,6 +44,8 @@ class Utils:
         self.away[str(ctx.author.id)]['collecting'] = True
 
     async def on_message(self, message):
+        self.search[str(message.id)] = {'channel': str(message.channel.id)}
+        self.save_settings()
         if not message.guild:
             return
         for member in message.guild.members:
@@ -116,15 +121,56 @@ class Utils:
         await msg.edit(content=f'```py\nNonbalanced Equation: {equation}```\n\n<a:loading:393852367751086090>')
         await msg.edit(content=f'```py\nNonbalanced Equation: {equation}\n\nBalanced Equation: {answer.string()}```')
 
+    @commands.command(name='search')
+    async def cmd_name(self, ctx, *, id: int):
+        """Don't know where an id came from? Search it!
+        This function is compatible with guild ids, channel ids, emoji ids, and message ids!"""
+        if str(id) in self.search:
+            chan1 = self.search[str(id)]['channel']
+            chan = self.bot.get_channel(int(chan1))
+            msg = await chan.get_message(id=id)
+            f = discord.Embed(description=msg.content, color=ctx.guild.me.color)
+            f.set_author(name=msg.author, icon_url=msg.author.avatar_url_as(format=None))
+            f.timestamp = datetime.datetime.utcnow()
+            return await ctx.send(embed=f)
+        content = []
+        guild = self.bot.get_guild(id=id)
+        channel = self.bot.get_channel(id=id)
+        emoji = self.bot.get_emoji(id=id)
+        e = discord.Embed(color=ctx.guild.me.color)
+        if guild is not None:
+            content.append(f'**Type:** Guild\n**Name:** {guild.name}\n**ID:** {id}\n**Owner:** {guild.owner}'
+                           f'\n**Created:** {guild.created_at}')
+            thumbnail = guild.icon_url
+            e.set_thumbnail(url=thumbnail)
+        if channel is not None:
+            content.append(f'**Type:** Channel\n**Name:** {channel.name}\n**ID:** {channel.id}\n**Guild:** '
+                           f'{channel.guild.name} ({channel.guild.id})\n**Mention:** {channel.mention}\n**Created:** {channel.created_at}')
+            thumbnail = channel.guild.icon_url
+            e.set_thumbnail(url=thumbnail)
+        if emoji is not None:
+            content = f'**Type:** Emoji\n**Name:** {emoji.name}\n**ID:** {emoji.id}\n**Is Animated:** {emoji.animated}\n' \
+                      f'**Guild:** {emoji.guild.name} ({emoji.guild.id})\n**Created:** {emoji.created_at}'
+            thumbnail = emoji.url
+            e.set_thumbnail(url=thumbnail)
+        e.description = '\n\n'.join(content)
+        await ctx.send(embed=e)
+
 def check_folders():
     if not os.path.exists("data/away"):
         print("Creating data/away folder...")
         os.makedirs("data/away")
+    if not os.path.exists("data/search"):
+        print("Creating data/search folder...")
+        os.makedirs("data/search")
 
 def check_files():
     if not os.path.exists("data/away/away.json"):
         print("Creating data/away/away.json file...")
         dataIO.save_json("data/away/away.json", {})
+    if not os.path.exists("data/search/search.json"):
+        print("Creating data/search/search.json file...")
+        dataIO.save_json("data/search/search.json", {})
 
 def setup(bot):
     check_folders()
